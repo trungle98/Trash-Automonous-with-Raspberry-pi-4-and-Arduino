@@ -59,61 +59,103 @@ void loop()
   int distanceLeft = 0;
   delay(50);
   Serial.print("Distance < 40: "+distance);
-
-
-
-  if (distance <= 30)
-  {
-    Serial.print("Distance < 40: "+distance);
+  if(distance <= 60){
     moveStop();
     delay(300);
     moveBackward();
-    delay(400);
+    delay(300);
     moveStop();
     delay(300);
     distanceRight = lookRight();
     delay(300);
     distanceLeft = lookLeft();
     delay(300);
-
-    if (distanceRight >= distanceLeft)
-    {
+    if(distanceRight > distanceLeft){
       turnRight();
       delay(300);
       moveStop();
-    }
-    else
-    {
-      turnLeft();
-      delay(300);
-      moveStop();
-    }
-  
-  }
-  else
-  {
- 
-    Serial.print("Distance: "+distance);
-    if(checkingTrash() == 2){
-      moveForward(); 
-      turnOnClearTrash();
-    }else if(checkingTrash() == 3){
-      turnRight();
-      //turnLeft();
-      delay(300);
-      moveStop();
-      checkingTrash();
     }else{
       turnLeft();
       delay(300);
       moveStop();
-      checkingTrash();
     }
-    
+     delay(3000);
+    turnOffClearTrash();
+  }else{
+    int check = checkingTrash();
+    if(check == 2){
+      moveForward();
+      delay(300);
+      turnOnClearTrash();
+    }else if(check == 3){
+      turnOffClearTrash();
+      turnRight();
+      delay(100);
+      moveStop();
+    }else{
+      turnOffClearTrash();
+      turnLeft();
+      delay(100);
+      moveStop();
+    }
+    delay(3000);
   }
 
-    distance = 100;
 
+//  if (distance <= 60)
+//  {
+//    Serial.print("Distance < 40: "+distance);
+//    moveStop();
+//    delay(300);
+//    moveBackward();
+//    delay(400);
+//    moveStop();
+//    delay(300);
+//    distanceRight = lookRight();
+//    delay(300);
+//    distanceLeft = lookLeft();
+//    delay(300);
+//  turnOffClearTrash();
+//    if (distanceRight >= distanceLeft)
+//    {
+//      turnRight();
+//      delay(300);
+//      moveStop();
+//    }
+//    else
+//    {
+//      turnLeft();
+//      delay(300);
+//      moveStop();
+//    }
+//  
+//  }
+//  else
+//  {
+// 
+//    Serial.print("Distance: "+distance);
+//    if(checkingTrash() == 2){
+//      moveForward(); 
+//      turnOnClearTrash();
+//    }else if(checkingTrash() == 3){
+//      turnRight();
+//      //turnLeft();
+//      delay(3500);
+//      moveStop();
+//      checkingTrash();
+//      turnOffClearTrash();
+//    }else{
+//      turnLeft();
+//      delay(3500);
+//      moveStop();
+//      checkingTrash();
+//      turnOffClearTrash();
+//    }
+//    
+//  }
+
+    distance = readSensor();
+//delay(3500);
 }
 
 int readSensor(){
@@ -151,10 +193,10 @@ void moveStop()       // Move Stop Function for Motor Driver.
 
 void moveForward()    // Move Forward Function for Motor Driver.
 {
-    digitalWrite(RightMotorForward, HIGH);
-    digitalWrite(RightMotorBackward, LOW);
-    digitalWrite(LeftMotorForward, HIGH);
-    digitalWrite(LeftMotorBackward, LOW);
+    analogWrite(RightMotorForward, 0);
+    analogWrite(RightMotorBackward, 123);
+    analogWrite(LeftMotorForward, 0);
+    analogWrite(LeftMotorBackward, 123);
 
     Serial.println("moveForward");
 }
@@ -162,20 +204,22 @@ void moveForward()    // Move Forward Function for Motor Driver.
 void moveBackward()   // Move Backward Function for Motor Driver.
 {
   //analogWrite(RightMotorForward, HIGH);
-  digitalWrite(RightMotorForward, HIGH);
-  analogWrite(RightMotorBackward, 255);
-  digitalWrite(LeftMotorForward, HIGH);
-  analogWrite(LeftMotorBackward, 255);
+  analogWrite(RightMotorForward, 92);
+  analogWrite(RightMotorBackward, 0);
+  analogWrite(LeftMotorForward, 92);
+  analogWrite(LeftMotorBackward, 0);
   //analogWrite(RightMotorForward, HIGH);
   Serial.println("moveBackward");
 }
 
 void turnRight()      // Turn Right Function for Motor Driver.
 {
-  digitalWrite(RightMotorForward, 0);
-  digitalWrite(RightMotorBackward, 255);
-  digitalWrite(LeftMotorForward, 255);
-  digitalWrite(LeftMotorBackward, 0);
+  //delay(3500);
+  analogWrite(RightMotorForward, 0);
+  analogWrite(RightMotorBackward, 51);
+  analogWrite(LeftMotorForward, 51);
+  analogWrite(LeftMotorBackward, 0);
+  delay(300);
 //  Serial.println(" turnRight-----------  "+ checkcam);
   //Serial.print( checkcam);
 }
@@ -184,10 +228,12 @@ void turnLeft()       // Turn Left Function for Motor Driver.
 {
   Serial.println("turnLeft");
   //Serial.print(checkcam);
-  digitalWrite(RightMotorForward, HIGH);
-  digitalWrite(RightMotorBackward, LOW);
-  digitalWrite(LeftMotorForward, LOW);
-  digitalWrite(LeftMotorBackward, HIGH);
+  //delay(3500);
+ analogWrite(RightMotorForward, 51);
+  analogWrite(RightMotorBackward, 0);
+  analogWrite(LeftMotorForward, 0);
+  analogWrite(LeftMotorBackward, 51);
+  delay(300);
 
 }
 int lookRight()     // Look Right Function for Servo Motor
@@ -239,8 +285,15 @@ void turnOnClearTrash(){
   digitalWrite(choiquet, 0);
   Serial.print("turnOnClearTrash");
 }
+void turnOffClearTrash(){
+  
+  digitalWrite(bangchuyen, 0);
+  digitalWrite(choiquet, 0);
+  Serial.print("turnOffClearTrash");
+}
 int checkingTrash(){
-  while(!Serial.available()) {}
+  int ans = 10;
+  while(!Serial.available()) {return 10;}
   // serial read section
   while (Serial.available())
   {
@@ -254,7 +307,10 @@ int checkingTrash(){
   if (readString.length() >0)
   {
     Serial.print("Arduino received: ");  
-    Serial.println(readString); //see what was received
+     ans = readString.charAt(0) - '0';
+    Serial.println(ans); //see what was received
+  }else{
+    return 10;
   }
 
   delay(500);
@@ -263,8 +319,11 @@ int checkingTrash(){
 
   char ard_sends = '1';
   Serial.print("Arduino sends: ");
-  Serial.println(ard_sends);
+  //Serial.println(ard_sends);
   Serial.print("\n");
   Serial.flush();
-  return readString.toInt();
+  
+  Serial.println(ans);
+  delay(2000);
+  return ans;
 }
